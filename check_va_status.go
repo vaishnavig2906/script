@@ -32,12 +32,12 @@ const (
 	URL = "https://api.xendit.co/callback_virtual_account_payments/payment_id=%s"
 )
 
-func CheckVAPaymentStatus(ctx context.Context, secretKey string, paymentID string) (resp CheckVAStatusResponse, dpayErr *dcerrors.DpayError) {
+func CheckVAPaymentStatus(ctx context.Context, AuthenticationToken string, paymentID string) (resp CheckVAStatusResponse, dpayErr *dcerrors.DpayError) {
 	url := fmt.Sprintf(URL, paymentID)
 	timeout := 30000 * time.Millisecond
 	client := httpclient.NewClient(httpclient.WithHTTPTimeout(timeout))
 
-	httpResponse, err := api.Get(ctx, url, getHTTPHeaders(secretKey), client)
+	httpResponse, err := api.Get(ctx, url, getHTTPHeaders(AuthenticationToken), client)
 	if err != nil {
 		dpayErr = &dcerrors.DpayError{
 			ErrorDescription: "error getting response from xendit",
@@ -85,11 +85,11 @@ func CheckVAPaymentStatus(ctx context.Context, secretKey string, paymentID strin
 	return
 }
 
-func getHTTPHeaders(secretKey string) (headers map[string]string) {
+func getHTTPHeaders(AuthenticationToken string) (headers map[string]string) {
 	basicAuth := fmt.Sprintf(
 		"%s %s",
 		"BASIC",
-		base64.StdEncoding.EncodeToString([]byte(secretKey+":")),
+		base64.StdEncoding.EncodeToString([]byte(AuthenticationToken+":")),
 	)
 
 	headers = map[string]string{
@@ -101,16 +101,25 @@ func getHTTPHeaders(secretKey string) (headers map[string]string) {
 }
 
 func main() {
-	secretKey := os.Args[1]
+	AuthenticationToken := os.Args[1]
 	paymentID := os.Args[2]
 
 	ctx := context.Background()
 
-	resp, err := CheckVAPaymentStatus(ctx, secretKey, paymentID)
+	resp, err := CheckVAPaymentStatus(ctx, AuthenticationToken, paymentID)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(resp)
+	fmt.Println("id: ", resp.Id)
+	fmt.Println("payment_id: ", resp.PaymentID)
+	fmt.Println("callback_virtual_account_id: ", resp.CallbackVirtualAccountID)
+	fmt.Println("external_id: ", resp.ExternalID)
+	fmt.Println("bank_code: ", resp.BankCode)
+	fmt.Println("merchant_code: ", resp.MerchantCode)
+	fmt.Println("account_number: ", resp.AccountNumber)
+	fmt.Println("amount: ", resp.Amount)
+	fmt.Println("transaction_timestamp: ", resp.TransactionTimestamp)
+	fmt.Println("sender_name: ", resp.SenderName)
 }
