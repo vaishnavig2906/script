@@ -1,0 +1,2 @@
+run following in the terminal
+go run check_va_status.go {secret key} {payment id}
